@@ -16,7 +16,7 @@ export default defineConfig([
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
     plugins: { '@typescript-eslint': tseslint.plugin, js },
-    extends: ['js/recommended', ...tseslint.config.recommended],
+    extends: ['js/recommended', ...tseslint.configs.recommended],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: { project: ['./tsconfig.json'] },
