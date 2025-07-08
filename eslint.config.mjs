@@ -31,7 +31,7 @@ export default defineConfig([
       '@typescript-eslint/strict-boolean-expressions': 'off',
       'no-return-assign': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
-      '@typescript-eslint/explicit-function-return-value': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       'array-callback-return': 'off',
     },
   },
