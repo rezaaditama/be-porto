@@ -1,10 +1,9 @@
-import { getLanguagePercentageService } from './src/services/github.service';
-(async () => {
-  try {
-    const repos = await getLanguagePercentageService();
+import { fetchGithubRepoService } from './src/services/github.service';
+import { saveSkillDbService } from './src/services/skills.service';
 
-    console.log(repos);
-  } catch (error) {
-    console.error('Error fetching repos:', error);
-  }
-})();
+const run = async () => {
+  const result = await fetchGithubRepoService();
+  await saveSkillDbService(result);
+};
+
+run();

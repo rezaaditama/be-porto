@@ -1,12 +1,15 @@
-export const calculatePercentage = (
-  data: Record<string, number>
-): Record<string, number> => {
-  const total = Object.values(data).reduce((acc, val) => acc + val, 0);
-  const percentages: Record<string, number> = {};
+import { LanguagePercentage } from '../types/github.type';
 
-  for (const [key, value] of Object.entries(data)) {
-    percentages[key] = parseFloat(((value / total) * 100).toFixed(2));
-  }
+export const calculatePercentageUtils = (
+  languageTotal: Record<string, number>
+): LanguagePercentage[] => {
+  const totalByte = Object.values(languageTotal).reduce(
+    (acc, byte) => acc + byte,
+    0
+  );
 
-  return percentages;
+  return Object.entries(languageTotal).map(([language, bytes]) => ({
+    language,
+    percentage: parseFloat(((bytes / totalByte) * 100).toFixed(2)),
+  }));
 };

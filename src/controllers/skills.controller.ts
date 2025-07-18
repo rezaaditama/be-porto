@@ -1,13 +1,29 @@
 import { Request, Response } from 'express';
-import { getAllSkills } from '../services/skills.service';
+import { logger } from '../utils/logger';
+import { fetchAllSkillService } from '../services/skills.service';
 
 export const getAllSkillController = async (req: Request, res: Response) => {
   try {
-    const data = await getAllSkills();
-    return res.status(200).json({ status: true, statusCode: 200, data: data });
+    const data = await fetchAllSkillService();
+    logger.info('Semua Skill Telah Dikirim');
+    res.status(200).json({
+      status: true,
+      statusCode: 200,
+      message: 'Get All Skill',
+      data: data,
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ status: false, statusCode: 500, message: `Gagal : ${error}` });
+    logger.error({
+      status: false,
+      message: 'Gagal Mengambil Data Skill',
+      error,
+      endpoint: req.originalUrl,
+      method: req.method,
+    });
+    res.status(500).json({
+      status: false,
+      statusCode: 500,
+      message: 'Gagal Mengambil Data Skill',
+    });
   }
 };

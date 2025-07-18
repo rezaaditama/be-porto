@@ -1,11 +1,33 @@
+import { LanguagePercentage } from '../types/github.type';
 import { prisma } from '../../prisma/client';
 
-export const getAllSkills = async () => {
+export const saveSkillDbService = async (languages: LanguagePercentage[]) => {
   try {
-    const skills = await prisma.skill.findMany();
-    return skills;
+    for (const data of languages) {
+      await prisma.skill.upsert({
+        where: {
+          language: data.language,
+        },
+        update: {
+          percentage: data.percentage,
+          createdAt: new Date(),
+        },
+        create: {
+          language: data.language,
+          percentage: data.percentage,
+        },
+      });
+    }
+    console.log(`Bahasa Berhasil Di Perbarui`);
   } catch (error) {
-    console.log('error : ', error);
-    throw new Error('Error nich');
+    console.error('Gagal Menyimpan Data Bahasa : ', error);
   }
+};
+
+export const fetchAllSkillService = async () => {
+  return await prisma.skill.findMany({
+    orderBy: {
+      percentage: 'desc',
+    },
+  });
 };

@@ -1,61 +1,43 @@
 import dotenv from 'dotenv';
-import { calculatePercentage } from '../utils/convertSkillPercentage.utils';
-import { LanguagePercentage } from '../types/github.type';
+import { githubRequest } from '../utils/githubRequest.utils';
+import { GithubRepo, LanguagePercentage } from '../types/github.type';
+import { calculatePercentageUtils } from '../utils/convertSkillPercentage.utils';
 dotenv.config();
 
-export const fetchGithubRepoService = async <T = unknown>(): Promise<
-  T[] | undefined
+export const fetchGithubRepoService = async (): Promise<
+  LanguagePercentage[]
 > => {
-  const token = process.env.GITHUB_TOKEN;
   try {
-    if (!token) {
-      throw new Error('GITHUB_TOKEN tidak ditemukan di .env');
-    }
-    const response = await fetch(
-      'https://api.github.com/user/repos?visibility=public&affiliation=owner',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-        },
-      }
+    const repoUrl =
+      'https://api.github.com/user/repos?visibility=public&affiliation=owner&per_page=100';
+    const repoGithub = await githubRequest<GithubRepo[]>(repoUrl);
+
+    const languageTotal: Record<string, number> = {};
+
+    await Promise.all(
+      repoGithub
+        .filter((repo) => !repo.fork)
+        .map(async (repo) => {
+          try {
+            const languageData = await githubRequest<Record<string, number>>(
+              repo.languages_url
+            );
+
+            for (const [language, bytes] of Object.entries(languageData)) {
+              languageTotal[language] = (languageTotal[language] || 0) + bytes;
+            }
+          } catch (error) {
+            console.error(
+              `Gagal mengambil bahasa dari repo ${repo.name}`,
+              error
+            );
+          }
+        })
     );
-    const data = await response.json();
-    return data;
+
+    return calculatePercentageUtils(languageTotal);
   } catch (error) {
-    console.log('error saat fetching data github : ', error);
+    console.error('Terjadi kesalahan saat mengambil data GitHub:', error);
+    return [];
   }
-};
-
-export const getLanguagePercentageService = async (): Promise<
-  Record<string, number>
-> => {
-  const repos = await fetchGithubRepoService<LanguagePercentage>();
-  const totalLanguages: Record<string, number> = {};
-
-  if (!repos) return {};
-
-  await Promise.all(
-    repos.map(async (repo) => {
-      try {
-        const response = await fetch(repo.languages_url);
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(
-            `Error from ${repo.name}: ${response.status} - ${errorText}`
-          );
-          return;
-        }
-        const data: Record<string, number> = await response.json();
-        for (const [lang, bytes] of Object.entries(data)) {
-          totalLanguages[lang] = (totalLanguages[lang] || 0) + bytes;
-        }
-      } catch (error) {
-        console.log(`Gagal mengambil bahasa dari ${repo.name}`, error);
-      }
-    })
-  );
-
-  const percentages = calculatePercentage(totalLanguages);
-  return percentages;
 };
